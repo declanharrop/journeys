@@ -12,13 +12,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // This is your server-side "source of truth" for prices.
 // Make sure these Price IDs are correct.
 const PLAN_CONFIG = {
-  'price_...YOUR_MONTHLY_ID...': {
+  'price_1SQScqIlcUDYS9QKfEdD30Ym': {
     trialDays: 5,
   },
-  'price_...YOUR_YEARLY_ID...': {
+  'price_1SQSdBIlcUDYS9QKU23n5Too': {
     trialDays: 0,
   },
-  'price_...YOUR_2_YEAR_ID...': {
+  'price_1SQSdoIlcUDYS9QKBY2iNDfB': {
     trialDays: 0,
   },
 };
