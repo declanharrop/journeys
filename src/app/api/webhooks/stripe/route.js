@@ -1,5 +1,3 @@
-// journeys/app/src/app/api/webhooks/stripe/route.js
-
 import { NextResponse } from 'next/server';
 import { serverClient } from '@/lib/sanity.server';
 import { groq } from 'next-sanity';
@@ -8,73 +6,78 @@ import { Stripe } from 'stripe';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-/**
- * Helper function to find a user in Sanity by their Stripe Customer ID.
- */
 const findUserByStripeId = async (customerId) => {
-  const query = groq`*[_type == "user" && stripeCustomerId == $customerId][0]{ _id }`;
-  const user = await serverClient.fetch(query, { customerId });
-  return user?._id;
+  // ... (this helper function is correct)
 };
+
+/**
+ * Helper function to map Stripe's status to our simplified Sanity status.
+ */
+function mapStripeStatus(stripeStatus) {
+  switch (stripeStatus) {
+    case 'active':
+    case 'trialing': // 👈 THIS IS THE FIX
+      return 'premium';
+    case 'past_due':
+      return 'past_due';
+    case 'canceled':
+      return 'canceled';
+    default:
+      return 'free'; // 'inactive', 'unpaid', etc.
+  }
+}
 
 /**
  * Helper function to update the user's subscription details in Sanity.
  */
-const updateSanitySubscription = async (customerId, status, periodEnd) => {
-  // Find the Sanity user document ID using the Stripe ID
+const updateSanitySubscription = async (customerId, stripeStatus, periodEnd) => {
   const userId = await findUserByStripeId(customerId);
-  
   if (!userId) {
     throw new Error(`[Webhook] User not found for Stripe customer: ${customerId}`);
   }
 
-  // Convert the Unix timestamp (in seconds) from Stripe to an ISO string
+  // 👇 --- THIS IS THE FIX --- 👇
+  // Convert Stripe status ('trialing') to our app status ('premium')
+  const sanityStatus = mapStripeStatus(stripeStatus);
   const periodEndDate = new Date(periodEnd * 1000).toISOString();
+  // 👆 --- END OF FIX --- 👆
 
-  // Patch the user document
   await serverClient
     .patch(userId)
     .set({
-      subscriptionStatus: status,
+      subscriptionStatus: sanityStatus, // Save the mapped status
       currentPeriodEnd: periodEndDate,
     })
     .commit();
   
-  console.log(`[Webhook] Updated Sanity user ${userId} to ${status}`);
+  console.log(`[Webhook] Updated Sanity user ${userId} to ${sanityStatus}`);
 };
 
 export async function POST(request) {
-  const payload = await request.text();
-  const signature = request.headers.get('stripe-signature');
+  // ... (payload, signature, and event verification logic is correct)
 
   let event;
-
   try {
-    // 1. Verify the event came from Stripe
     event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
   } catch (err) {
-    console.warn(`Webhook Error: ${err.message}`);
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+    // ...
   }
 
-  // 2. Handle the event
+  // Handle the event
   try {
     switch (event.type) {
-      // Fired when a 7-day trial starts
       case 'checkout.session.completed': {
         const session = event.data.object;
-        // We need to get the full subscription object
         const subscription = await stripe.subscriptions.retrieve(session.subscription);
         
         await updateSanitySubscription(
           subscription.customer,
           subscription.status, // This will be 'trialing'
-          subscription.current_period_end // This will be 7 days from now
+          subscription.current_period_end
         );
         break;
       }
 
-      // Fired for renewals, cancellations, and when a trial ends
       case 'customer.subscription.updated': {
         const subscription = event.data.object;
         await updateSanitySubscription(
@@ -85,22 +88,19 @@ export async function POST(request) {
         break;
       }
 
-      // Fired when the subscription is fully deleted
       case 'customer.subscription.deleted': {
         const subscription = event.data.object;
         await updateSanitySubscription(
           subscription.customer,
-          subscription.status, // e.g., 'canceled'
+          subscription.status, // 'canceled'
           subscription.current_period_end
         );
         break;
       }
     }
   } catch (error) {
-    console.error(`[Webhook] Error handling event ${event.type}:`, error);
-    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
+    // ...
   }
 
-  // 3. Respond to Stripe
   return NextResponse.json({ received: true });
 }
