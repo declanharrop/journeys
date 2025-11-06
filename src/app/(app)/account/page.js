@@ -9,6 +9,7 @@ import { serverClient } from '@/lib/sanity.server';
 import { groq } from 'next-sanity';
 import ManageSubButton from '@/components/ManageSubButton'; 
 import styles from '@/styles/pages/account/accountPage.module.css'; 
+import SignOutButton from '@/components/SignOutButton';
 
 // We must set the runtime to 'nodejs' to use the serverClient
 export const runtime = 'nodejs';
@@ -137,6 +138,7 @@ export default async function AccountPage() {
           ) : (
              <p>You do not have a subscription to manage.</p>
           )}
+          <SignOutButton />
         </div>
       </div>
     </main>
