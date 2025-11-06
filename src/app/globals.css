@@ -1,42 +1,231 @@
+/* journeys/app/src/app/globals.css */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* --- 🎨 New Blue/Green Color Palette --- */
+
+  /* We define RGB values first to easily use them for opacity */
+  --color-primary-rgb: 4, 108, 114;
+  /* A deep, calming teal */
+  --color-secondary-rgb: 104, 191, 178;
+  /* A light, friendly seafoam green */
+  --color-accent-rgb: 67, 139, 178;
+  /* A supportive, clear blue */
+
+  --color-text-rgb: 27, 40, 40;
+  /* Dark, soft black (not harsh #000) */
+  --color-text-muted-rgb: 90, 90, 90;
+  /* For labels and sub-text */
+  --color-border-rgb: 204, 214, 213;
+  /* Soft grey for borders/inputs */
+  --color-background-rgb: 252, 255, 254;
+  /* A very light, airy off-white */
+  --color-white-rgb: 255, 255, 255;
+
+  --color-error-rgb: 211, 47, 47;
+
+  /* --- Full Color Variables --- */
+  --color-primary: rgb(var(--color-primary-rgb));
+  --color-secondary: rgb(var(--color-secondary-rgb));
+  --color-accent: rgb(var(--color-accent-rgb));
+
+  --color-text: rgb(var(--color-text-rgb));
+  --color-text-muted: rgb(var(--color-text-muted-rgb));
+  --color-border: rgb(var(--color-border-rgb));
+  --color-background: rgb(var(--color-background-rgb));
+  --color-white: rgb(var(--color-white-rgb));
+  --color-error: rgb(var(--color-error-rgb));
+
+  /* --- Utilities --- */
+  --shadow-sm: 0 1px 2px rgba(var(--color-text-rgb), 0.05);
+  --shadow-md: 0 4px 6px rgba(var(--color-text-rgb), 0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
+/* --- 1. Global Reset & Base Styles --- */
+html {
   box-sizing: border-box;
-  padding: 0;
+  font-size: 10px;
+  /* Base font size: 1rem = 10px */
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
   margin: 0;
+  padding: 0;
+}
+
+body {
+  /* Use the CSS variable from layout.js, with a fallback */
+  font-family: var(--font-lexend), Helvetica, sans-serif;
+  font-size: 1.6rem;
+  /* 16px */
+  font-weight: 300;
+  letter-spacing: 0.05rem;
+  line-height: 1.3;
+  color: var(--color-text);
+  background-color: var(--color-background);
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* --- 2. Typography --- */
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-weight: 400;
+  letter-spacing: 0.1rem;
+  line-height: 1.4;
+}
+
+h1 {
+  font-size: 6rem;
+}
+
+h2 {
+  font-size: 4rem;
+}
+
+h3 {
+  font-size: 2.4rem;
+}
+
+h4 {
+  font-size: 2rem;
+}
+
+h5 {
+  font-size: 1.8rem;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.3rem;
+}
+
+p {
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: 0.1rem;
+  line-height: 1.3;
 }
 
 a {
-  color: inherit;
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: 0.1rem;
   text-decoration: none;
+  color: var(--color-primary);
+  transition: opacity 0.2s ease-in-out;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+a:hover {
+  opacity: 0.75;
+}
+
+/* --- 3. Base Elements (Buttons, Forms) --- */
+
+button {
+  font-family: inherit;
+  /* Inherit font from body */
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: 0.05rem;
+  padding: 12px 24px;
+  border-radius: 30px;
+  /* Friendlier, more rounded */
+  background: var(--color-primary);
+  color: var(--color-white);
+  cursor: pointer;
+  border: 1px solid var(--color-primary);
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+  background: rgba(var(--color-primary-rgb), 0.8);
+  border-color: rgba(var(--color-primary-rgb), 0.8);
+}
+
+button:disabled {
+  background-color: var(--color-border);
+  border-color: var(--color-border);
+  cursor: not-allowed;
+}
+
+/* --- 4. Form Styling --- */
+
+form {
+  margin: 20px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 600px;
+  text-align: left;
+}
+
+label {
+  margin: 0 0 4px 20px;
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
+}
+
+/* Common style for all form inputs */
+input,
+textarea,
+select {
+  font-family: inherit;
+  /* Inherit font from body */
+  background: rgba(var(--color-border-rgb), 0.3);
+  font-size: 1.6rem;
+  font-weight: 400;
+  letter-spacing: 0.05rem;
+  padding: 16px 20px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.2);
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* --- 5. Utility Classes --- */
+
+/* For screen-reader-only labels, like in your onboarding form */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* --- 6. Swiper Styling --- */
+/* (You can theme these with your new colors) */
+
+:root {
+  --swiper-theme-color: var(--color-primary);
+}
+
+.swiper-button-next {
+  margin-right: 16px;
+}
+
+.swiper-button-prev {
+  margin-left: 16px;
+  text-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
 }

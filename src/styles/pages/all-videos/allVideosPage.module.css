@@ -1,0 +1,30 @@
+/* journeys/app/src/app/styles/pages/all-videos/allVideosPage.module.css */
+
+.container {
+  padding: 20px;
+}
+
+.header {
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 2.8rem;
+  /* 28px */
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.subtitle {
+  font-size: 1.6rem;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+.feedGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  /* Single column on mobile */
+  gap: 24px;
+}

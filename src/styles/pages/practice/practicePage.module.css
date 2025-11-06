@@ -1,0 +1,24 @@
+/* journeys/app/src/app/styles/pages/practice/practicePage.module.css */
+.container {
+  padding: 0;
+  /* The player will be edge-to-edge */
+}
+
+.content {
+  padding: 24px 20px 80px 20px;
+  /* Add padding for content below the video */
+  text-align: left;
+}
+
+.title {
+  font-size: 2.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.description {
+  font-size: 1.6rem;
+  color: var(--color-text-muted);
+  margin-top: 12px;
+  line-height: 1.5;
+}

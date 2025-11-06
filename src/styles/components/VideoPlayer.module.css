@@ -1,0 +1,6 @@
+/* journeys/app/src/app/styles/components/VideoPlayer.module.css */
+.playerContainer {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: #000;
+}

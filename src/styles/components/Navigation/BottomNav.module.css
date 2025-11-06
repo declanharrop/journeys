@@ -1,0 +1,86 @@
+/* journeys/app/src/app/styles/components/Navigation/BottomNav.module.css */
+
+.navContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 70px;
+  /* Slightly taller for more presence */
+  background-color: var(--color-white);
+  /* Use white for the bar */
+  border-top: 1px solid rgba(var(--color-border-rgb), 0.7);
+  /* Softer border */
+  z-index: 1000;
+  box-shadow: 0 -4px 12px rgba(var(--color-text-rgb), 0.08);
+  /* More pronounced shadow */
+  /* Ensures it stretches full width and handles iPhone safe areas */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.navList {
+  list-style: none;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.navItem {
+  flex: 1;
+  text-align: center;
+  /* Center content within each item */
+}
+
+.navLink {
+  display: flex;
+  flex-direction: column;
+  /* Stack icon and text */
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  /* Make the clickable area larger */
+  gap: 2px;
+  /* Less space between icon and text */
+  text-decoration: none;
+  font-size: 1.1rem;
+  /* Smaller, subtler text */
+  font-weight: 500;
+  /* Slightly bolder text */
+  color: var(--color-text-muted);
+  /* Muted text for inactive */
+  transition: color 0.2s ease-in-out;
+  position: relative;
+  /* For the active indicator */
+}
+
+.navLink:hover {
+  color: var(--color-text);
+}
+
+/* --- Active State Styling --- */
+.navLink.active {
+  color: var(--color-primary);
+  /* Primary color for active icon/text */
+}
+
+
+/* Icons within the nav */
+.icon {
+  font-size: 2.6rem;
+  /* Slightly larger icons */
+  line-height: 1;
+  margin-bottom: 2px;
+  /* Small margin below icon */
+}
+
+.lockIcon {
+  font-size: 0.9rem;
+  /* Smaller lock icon */
+  margin-left: 2px;
+  color: var(--color-text-muted);
+  /* Muted color for the lock */
+}
