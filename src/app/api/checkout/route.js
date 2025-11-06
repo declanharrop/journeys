@@ -1,3 +1,5 @@
+// journeys/app/src/app/api/checkout/route.js
+
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
@@ -7,71 +9,80 @@ import { Stripe } from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// This is your server-side "source of truth" for prices.
+// Make sure these Price IDs are correct.
 const PLAN_CONFIG = {
-  'price_1SQScqIlcUDYS9QKfEdD30Ym': {
+  'price_...YOUR_MONTHLY_ID...': {
     trialDays: 5,
   },
-  'price_1SQSdBIlcUDYS9QKU23n5Too': {
-    trialDays: 0, // No trial
+  'price_...YOUR_YEARLY_ID...': {
+    trialDays: 0,
   },
-  'price_1SQSdoIlcUDYS9QKBY2iNDfB': {
-    trialDays: 0, // No trial
+  'price_...YOUR_2_YEAR_ID...': {
+    trialDays: 0,
   },
 };
 
 export async function POST(request) {
   try {
+    // 1. --- THIS IS THE CHANGE ---
+    //    Get the user's session and use EMAIL
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const email = session?.user?.email;
+
+    if (!email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    // 2. --- END OF CHANGE ---
 
-    const { priceId } = await request.json(); // e.g., 'price_1P...'
-
+    const { priceId } = await request.json(); // The ID of the plan the user clicked
+    
+    // Look up the plan details from our secure config
     const plan = PLAN_CONFIG[priceId];
 
     if (!plan) {
-      // This stops a user from sending a fake priceId
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
     }
     
-    // Get the trial days. Default to 0 if not specified.
     const trialPeriodDays = plan.trialDays || 0;
     
-    const auth0Id = session.user.auth0Id;
-    
-    // 1. Get the user's Sanity document
+    // 3. --- THIS IS THE CHANGE ---
+    //    Fetch the Sanity user by EMAIL
     const user = await serverClient.fetch(
-      groq`*[_type == "user" && auth0Id == $auth0Id][0]{
+      groq`*[_type == "user" && email == $email][0]{
         _id,
         email,
         stripeCustomerId
       }`,
-      { auth0Id },
+      { email },
       { cache: 'no-store' }
     );
+    // 4. --- END OF CHANGE ---
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found in Sanity' }, { status: 404 });
+    }
 
     let stripeCustomerId = user.stripeCustomerId;
 
-    // 2. If they don't have a Stripe ID, create one
+    // If they don't have a Stripe ID, create one
     if (!stripeCustomerId) {
       const customer = await stripe.customers.create({
         email: user.email,
         metadata: {
-          auth0Id: auth0Id, // Link Stripe customer to Auth0 ID
           sanityId: user._id, // Link to Sanity _id
         },
       });
       stripeCustomerId = customer.id;
 
-      // 3. Save the new Customer ID to their Sanity document
+      // Save the new Customer ID to their Sanity document
       await serverClient
         .patch(user._id)
         .set({ stripeCustomerId: stripeCustomerId })
         .commit();
     }
-
-    // 4. Create the Stripe Checkout Session
+    
+    // Create the Stripe Checkout Session
     const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',

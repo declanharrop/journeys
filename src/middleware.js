@@ -2,25 +2,31 @@
 
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { serverClient } from '@/lib/sanity.server'; // Our secure server client
+import { serverClient } from './lib/sanity.server'; // Use your correct path
 import { groq } from 'next-sanity';
+
+// 1. We must use the 'nodejs' runtime for the serverClient
+export const runtime = 'nodejs';
 
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
 
-  // 1. Get the session token
-  // This securely reads the session cookie on the server
+  // 2. Get the session token
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
   });
-  const auth0Id = token?.auth0Id;
-  const isAuthenticated = !!token;
+  
+  // 3. --- THIS IS THE CHANGE ---
+  //    We now identify the user by EMAIL
+  const email = token?.email;
+  const isAuthenticated = !!email;
+  // 4. --- END OF CHANGE ---
 
   // --- DEFINE YOUR ROUTES ---
   const publicPaths = ['/']; // The landing page
   const onboardingPath = '/onboarding';
-  const protectedAppPaths = ['/home', '/journeys', '/account', '/all-videos'];
+  const protectedAppPaths = ['/home', '/journeys', '/account', '/all-videos', '/subscribe'];
 
   // --- LOGIC: USER IS NOT LOGGED IN ---
   if (!isAuthenticated) {
@@ -35,48 +41,57 @@ export async function middleware(req) {
 
   // --- LOGIC: USER *IS* LOGGED IN ---
   
-  // 2. Fetch their *live* data from Sanity (Your SST)
-  const userQuery = groq`*[_type == "user" && auth0Id == $auth0Id][0]{ onboardingComplete }`;
-  const user = await serverClient.fetch(userQuery, { auth0Id });
+  // 5. --- THIS IS THE CHANGE ---
+  //    Fetch their *live* data from Sanity using their EMAIL
+  const userQuery = groq`*[_type == "user" && email == $email][0]{ 
+    onboardingComplete, 
+    subscriptionStatus 
+  }`;
+  const user = await serverClient.fetch(userQuery, { email });
+  // 6. --- END OF CHANGE ---
 
-  // Safety check: if user exists in Auth0 but not Sanity (should be impossible
-  // after first login, but good to have)
+  // Safety check: if user exists in Auth0 but not Sanity
+  // (This is unlikely after our signIn callback, but good to have)
   if (!user) {
+    console.error(`Middleware: User ${email} not found in Sanity. Redirecting to /`);
+    // We could also redirect to a logout page here
     return NextResponse.redirect(new URL('/', req.url));
   }
 
   const { onboardingComplete } = user;
 
-  // 3. Handle your redirect logic
+  // --- Handle redirect logic (this is all correct) ---
   
-  // Point 3: If Onboarding is false, force them to the /onboarding page
+  // If Onboarding is false, force them to the /onboarding page
   if (!onboardingComplete) {
     if (pathname !== onboardingPath) {
       return NextResponse.redirect(new URL(onboardingPath, req.url));
     }
   }
   
-  // Point 2: If Onboarding is true, send them to /home
+  // If Onboarding is true, send them to /home
   if (onboardingComplete) {
-    // If they are on the landing page or (somehow) the onboarding page,
+    // If they are on the landing page or the onboarding page,
     // move them to the app's home.
     if (pathname === onboardingPath || publicPaths.includes(pathname)) {
       return NextResponse.redirect(new URL('/home', req.url));
     }
   }
 
-  // 4. If none of the above, let them continue to their requested page
+  // If none of the above, let them continue to their requested page
   return NextResponse.next();
 }
 
 // Config: Tell the middleware which paths to run on
 export const config = {
   matcher: [
-    '/',
+    '/', // Landing page
     '/home',
     '/journeys',
     '/account',
     '/onboarding',
     '/all-videos',
+    '/subscribe',
+    '/practice/:path*', // Also protect all individual practice pages
   ],
 };
