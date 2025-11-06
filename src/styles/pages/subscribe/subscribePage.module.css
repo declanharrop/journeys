@@ -1,0 +1,65 @@
+/* journeys/app/src/app/styles/pages/subscribe/subscribePage.module.css */
+.container {
+  padding: 20px;
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.title {
+  font-size: 2.8rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 12px;
+}
+
+.subtitle {
+  font-size: 1.6rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin-bottom: 32px;
+}
+
+.planGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.planButton {
+  font-family: inherit;
+  width: 100%;
+  padding: 20px;
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-align: left;
+  background-color: var(--color-white);
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.planButton:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.planButton.loading {
+  background-color: var(--color-border);
+  cursor: not-allowed;
+}
+
+.planDuration {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+.error {
+  color: var(--color-error);
+  margin-top: 20px;
+}
