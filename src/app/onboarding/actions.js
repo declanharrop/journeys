@@ -1,21 +1,29 @@
-// journeys/app/src/app/onboarding/actions.js
-'use server';
+'use server'; // This is a Server Action
 
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/authOptions';
-import { serverClient } from '@/lib/sanity.server.js';
+import { authOptions } from '@/lib/authOptions'; // Use our app's authOptions
+import { serverClient } from '@/lib/sanity.server';
 import { groq } from 'next-sanity';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
+// We must use the 'nodejs' runtime to use serverClient
+export const runtime = 'nodejs';
+
 export async function completeOnboarding(formData) {
+  
+  // 1. Get the session using our central authOptions
   const session = await getServerSession(authOptions);
 
-  if (!session || !session.user || !session.user.auth0Id) {
+  // 2. Check for the EMAIL in the session
+  if (!session?.user?.email) {
+    // This is the "Unauthorized" error you are seeing
     return { error: 'Unauthorized' };
   }
 
-  const auth0Id = session.user.auth0Id;
+  const email = session.user.email;
+  
+  // 3. Get the form data
   const { name, monthOfBirth, yearOfBirth, goals } = formData;
 
   if (!name || !monthOfBirth || !yearOfBirth || !goals || goals.length === 0) {
@@ -23,51 +31,36 @@ export async function completeOnboarding(formData) {
   }
 
   try {
-    // --- START CRITICAL BLOCK ---
-    // 1. Find the user
-    const sanityUser = await serverClient.fetch(
-      groq`*[_type == "user" && auth0Id == $auth0Id][0]{ _id }`,
-      { auth0Id }
+    // 4. Find the user in Sanity by their EMAIL
+    const user = await serverClient.fetch(
+      groq`*[_type == "user" && email == $email][0]{ _id }`,
+      { email }
     );
 
-    if (!sanityUser || !sanityUser._id) {
-      return { error: 'Sanity user not found' };
+    if (!user) {
+      return { error: 'User not found in Sanity' };
     }
     
-    const userId = sanityUser._id;
-
-    // 2. Patch the user (This is where Sanity gets updated)
+    // 5. Patch the user's document
     await serverClient
-      .patch(userId)
+      .patch(user._id)
       .set({ 
         name: name,
         monthOfBirth: parseInt(monthOfBirth, 10),
         yearOfBirth: parseInt(yearOfBirth, 10),
         goals: goals,
-        onboardingComplete: true,
+        onboardingComplete: true, // This is the most important part
       })
       .commit();
-    // --- END CRITICAL BLOCK ---
+
+    // 6. Revalidate the cache so the middleware sees the change
+    revalidatePath('/', 'layout');
 
   } catch (error) {
-    // If ANY of the above fails, return an error
     console.error('Onboarding Server Action Error:', error);
     return { error: error.message };
   }
 
-  // --- POST-SUCCESS TASKS ---
-  // If the 'try' block succeeded, we are here.
-  
-  // 3. Attempt to revalidate the cache.
-  // We wrap this in its OWN try/catch so it can't
-  // block the redirect if it fails.
-  try {
-    revalidatePath('/', 'layout');
-  } catch (revalidateError) {
-    console.warn('Cache revalidation failed (non-critical):', revalidateError);
-  }
-
-  // 4. Finally, redirect the user to the home page.
-  // This is now guaranteed to run if the Sanity patch was successful.
+  // 7. Redirect to the home page on success
   redirect('/home');
 }
