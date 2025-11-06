@@ -7,8 +7,6 @@ import { groq } from 'next-sanity';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
-// We must use the 'nodejs' runtime to use serverClient
-export const runtime = 'nodejs';
 
 export async function completeOnboarding(formData) {
   
