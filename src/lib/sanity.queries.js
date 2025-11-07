@@ -62,3 +62,12 @@ export const GET_PRACTICE_BY_SLUG_QUERY = groq`
     isPremium
   }
 `;
+
+export const GET_ACCOUNT_DETAILS_QUERY = groq`*[_type == "user" && email == $email][0]{
+  _id,
+  name,
+  email,
+  subscriptionStatus,
+  currentPeriodEnd,
+  stripeCustomerId
+}`;
