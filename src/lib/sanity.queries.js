@@ -71,3 +71,8 @@ export const GET_ACCOUNT_DETAILS_QUERY = groq`*[_type == "user" && email == $ema
   currentPeriodEnd,
   stripeCustomerId
 }`;
+
+export const GET_STRIPE_ID_QUERY = groq`*[_type == "user" && email == $email][0].stripeCustomerId`;
+
+// src/lib/sanity.queries.js
+// ... existing queries
