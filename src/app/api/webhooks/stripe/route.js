@@ -1,3 +1,5 @@
+// journeys/app/src/app/api/webhooks/stripe/route.js
+
 import { NextResponse } from 'next/server';
 import { sanityWriteClient } from '@/lib/sanity.server';
 import { GET_USER_BY_STRIPE_ID_QUERY } from '@/lib/sanity.queries';
@@ -27,7 +29,7 @@ export async function POST(req) {
   let statusToSet = '';
   let stripeId = '';
   let periodEndTimestamp = null;
-  let cancelAtPeriodEnd = false; // Default to false
+  let cancelAtPeriodEnd = false;
 
   try {
     switch (type) {
@@ -37,23 +39,27 @@ export async function POST(req) {
           stripeId = session.customer;
           const subId = typeof session.subscription === 'string' ? session.subscription : session.subscription.id;
           const subscription = await stripe.subscriptions.retrieve(subId);
+          
           statusToSet = subscription.status;
           periodEndTimestamp = subscription.current_period_end;
-          cancelAtPeriodEnd = subscription.cancel_at_period_end; // Capture flag
+          // Robust check for cancellation status
+          cancelAtPeriodEnd = subscription.cancel_at_period_end || (subscription.cancel_at !== null);
         }
         break;
       }
+      
       case 'invoice.payment_succeeded': {
-        const invoice = data.object;
-        if (invoice.subscription && invoice.customer) {
-          stripeId = invoice.customer;
-          const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
-          statusToSet = subscription.status;
-          periodEndTimestamp = subscription.current_period_end;
-          cancelAtPeriodEnd = subscription.cancel_at_period_end; // Capture flag
-        }
-        break;
+         const invoice = data.object;
+         if (invoice.subscription && invoice.customer) {
+           stripeId = invoice.customer;
+           const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+           statusToSet = subscription.status;
+           periodEndTimestamp = subscription.current_period_end;
+           cancelAtPeriodEnd = subscription.cancel_at_period_end || (subscription.cancel_at !== null);
+         }
+         break;
       }
+
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
@@ -61,9 +67,11 @@ export async function POST(req) {
         stripeId = subscription.customer;
         statusToSet = subscription.status;
         periodEndTimestamp = subscription.current_period_end;
-        cancelAtPeriodEnd = subscription.cancel_at_period_end; // Capture flag
+        // Robust check for cancellation status
+        cancelAtPeriodEnd = subscription.cancel_at_period_end || (subscription.cancel_at !== null);
         break;
       }
+      
       default:
         return NextResponse.json({ received: true });
     }
@@ -79,7 +87,7 @@ export async function POST(req) {
         .patch(user._id)
         .set({
           subscriptionStatus: statusToSet,
-          cancelAtPeriodEnd: cancelAtPeriodEnd, // Save flag to Sanity
+          cancelAtPeriodEnd: cancelAtPeriodEnd, // Will now be true if cancel_at is set
           ...(periodEndTimestamp && { currentPeriodEnd: toISOString(periodEndTimestamp) }),
         })
         .commit();
@@ -87,6 +95,7 @@ export async function POST(req) {
     }
 
     return NextResponse.json({ received: true });
+
   } catch (error) {
     console.error('Webhook processing error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
