@@ -1,19 +1,19 @@
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  /* 32px top, 20px sides, 100px bottom (for nav) */
+  /* 32px top, 20px sides, 100px bottom */
   padding: 3.2rem 2rem 10rem;
 }
 
 .header {
-  /* 40px margin */
   margin-bottom: 4rem;
+  /* 40px */
   text-align: left;
 }
 
 .header h1 {
-  /* 36px font size */
   font-size: 3.6rem;
+  /* 36px */
   font-weight: 800;
   margin-bottom: 1.2rem;
   /* 12px */
@@ -21,7 +21,15 @@
   letter-spacing: -0.025em;
 }
 
-.feedGrid {
+.header p {
+  font-size: 1.8rem;
+  /* 18px */
+  color: #4b5563;
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+.rowsContainer {
   display: flex;
   flex-direction: column;
   gap: 4.8rem;
@@ -31,6 +39,6 @@
 @media (max-width: 640px) {
   .header h1 {
     font-size: 3rem;
-    /* 30px on mobile */
+    /* 30px */
   }
 }

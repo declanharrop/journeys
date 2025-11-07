@@ -1,65 +1,148 @@
-/* journeys/app/src/app/styles/pages/subscribe/subscribePage.module.css */
 .container {
-  padding: 20px;
-  max-width: 500px;
+  width: 100%;
+  /* Assumed typo: 100px -> 1000px. Adjust if you want it wider (e.g. 1200px) */
+  max-width: 1000px;
   margin: 0 auto;
+  padding: 40px 20px;
   text-align: center;
+  /* Centers content vertically to "fill" the screen feel */
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .title {
-  font-size: 2.8rem;
-  font-weight: 600;
+  font-size: 3rem;
+  /* Slightly larger for bigger screens */
+  font-weight: 700;
   color: var(--color-primary);
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .subtitle {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   color: var(--color-text-muted);
-  line-height: 1.5;
-  margin-bottom: 32px;
+  line-height: 1.6;
+  margin-bottom: 48px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .planGrid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
+  /* Responsive grid: standard 1 column on mobile, up to 3 on desktop */
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  width: 100%;
 }
 
 .planButton {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   font-family: inherit;
   width: 100%;
-  padding: 20px;
-  font-size: 1.8rem;
-  font-weight: 600;
-  text-align: left;
+  padding: 32px 24px;
+  /* Bigger click area */
   background-color: var(--color-white);
   border: 2px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+  text-align: center;
+  /* Centered text looks better in side-by-side cards */
+}
+
+/* Optional: Make the middle plan (Yearly) pop out a bit */
+.planButton:nth-child(2) {
+  border-color: var(--color-primary);
+  transform: scale(1.05);
+  /* Make it slightly bigger by default */
+  box-shadow: var(--shadow-md);
 }
 
 .planButton:hover {
   border-color: var(--color-primary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Ensure the popped-out plan hovers correctly */
+.planButton:nth-child(2):hover {
+  transform: translateY(-4px) scale(1.07);
 }
 
 .planButton.loading {
-  background-color: var(--color-border);
-  cursor: not-allowed;
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* The name of the plan (e.g., "Monthly") */
+.planButton {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-main);
 }
 
 .planDuration {
   display: block;
-  font-size: 1.6rem;
-  font-weight: 400;
+  margin-top: 12px;
+  font-size: 1.25rem;
+  font-weight: 500;
   color: var(--color-text-muted);
-  margin-top: 4px;
 }
 
 .error {
   color: var(--color-error);
-  margin-top: 20px;
+  margin-top: 24px;
+  font-weight: 500;
+  padding: 12px;
+  background-color: #fee2e2;
+  /* Light red background for visibility */
+  border-radius: 8px;
+}
+
+.benefitsContainer {
+  margin-bottom: 48px;
+  text-align: left;
+  /* Easier to read lists when left-aligned */
+  display: inline-block;
+  /* Allows centering the whole block while keeping text left */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.benefitsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  /* Responsive: 1 column on small phones, 2 columns on larger screens */
+  grid-template-columns: 1fr;
+  gap: 16px 32px;
+  /* row gap | column gap */
+}
+
+@media (min-width: 600px) {
+  .benefitsList {
+    grid-template-columns: repeat(2, auto);
+  }
+}
+
+.benefitItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.1rem;
+  color: var(--color-text-main);
+}
+
+.checkIcon {
+  color: var(--color-primary);
+  /* Uses your brand color for the checkmark */
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  /* Prevents icon from squishing on small screens */
 }

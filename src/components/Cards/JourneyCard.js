@@ -1,34 +1,47 @@
-// journeys/app/src/app/components/Cards/JourneyCard.js
-'use client';
-
 import Link from 'next/link';
 import Image from 'next/image';
+import { urlFor } from '@/lib/sanity.client';
+import { GoLock } from 'react-icons/go';
 import styles from '@/styles/components/Cards/JourneyCard.module.css';
-import { urlFor } from '@/lib/sanity.client'; // 👈 Import our image builder
 
-export default function JourneyCard({ journey }) {
-  if (!journey) return null;
-
-  const { title, slug, mainImage, description } = journey;
-
-  // Build the image URL
-  const imageUrl = mainImage 
-    ? urlFor(mainImage).width(600).height(400).fit('crop').url()
-    : '/placeholder.jpg'; // A fallback image if one isn't set
+export default function JourneyCard({ journey, isLocked }) {
+  // Safety check: ensure mainImage exists before trying to build a URL
+  const imageUrl = journey?.mainImage
+    ? urlFor(journey.mainImage).width(800).height(450).fit('crop').url()
+    : null;
 
   return (
-    <Link href={`/journey/${slug}`} className={styles.cardLink}>
-      <div className={styles.imageContainer}>
-        <Image
-          src={imageUrl}
-          alt={title}
-          fill
-          className={styles.image}
-        />
+    <Link href={isLocked ? '/subscribe' : `/journeys/${journey.slug}`} className={styles.card}>
+      <div className={styles.imageWrapper}>
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={journey.title || 'Journey cover'}
+            fill
+            className={styles.image}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        ) : (
+          // Fallback if no image is uploaded in Sanity
+          <div className={styles.placeholder} />
+        )}
+        
+        {isLocked && (
+          <div className={styles.lockOverlay}>
+            <GoLock className={styles.lockIcon} />
+          </div>
+        )}
+        {journey.intensity && (
+           <span className={styles.badge}>{journey.intensity}</span>
+        )}
       </div>
       <div className={styles.content}>
-        <h3 className={styles.title}>{title}</h3>
-        <p className={styles.description}>{description}</p>
+        <h3 className={styles.title}>{journey.title}</h3>
+        <div className={styles.meta}>
+          <span>{journey.durationDays || 0} Days</span>
+          <span>•</span>
+          <span>{journey.practiceCount || 0} Practices</span>
+        </div>
       </div>
     </Link>
   );

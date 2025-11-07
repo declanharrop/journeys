@@ -1,0 +1,62 @@
+/* Apply to both PracticeRow.module.css AND JourneyRow.module.css */
+
+.rowContainer {
+  /* Removes bottom margin since the parent container handles gaps now */
+  margin-bottom: 0;
+}
+
+.rowTitle {
+  font-size: 2.4rem;
+  /* 24px */
+  font-weight: 700;
+  margin-bottom: 1.6rem;
+  /* 16px */
+  padding-left: 0;
+  /* Aligned with container padding now */
+  color: #111827;
+}
+
+.rowScroller {
+  display: flex;
+  overflow-x: auto;
+  /* 8px top, 4px sides, 24px bottom */
+  padding: 0.8rem 0.4rem 2.4rem;
+  gap: 2.4rem;
+  /* 24px gap between cards */
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Negative margin to allow scrolling edge-to-edge on mobile if desired */
+  margin: 0 -2rem;
+  padding-left: 2rem;
+  /* Compensate for negative margin */
+  padding-right: 2rem;
+}
+
+.rowScroller::-webkit-scrollbar {
+  display: none;
+}
+
+.cardWrapper {
+  flex: 0 0 auto;
+  width: 30rem;
+  /* 300px standard card width */
+  scroll-snap-align: start;
+}
+
+/* Journey cards are typically wider */
+/* ONLY for JourneyRow.module.css use this width instead: */
+/* .cardWrapper { width: 32rem; } */
+
+@media (max-width: 768px) {
+  .cardWrapper {
+    width: 26rem;
+    /* 260px on mobile */
+  }
+
+  .rowTitle {
+    font-size: 2rem;
+    /* 20px */
+  }
+}

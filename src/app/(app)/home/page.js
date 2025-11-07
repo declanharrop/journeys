@@ -1,56 +1,78 @@
-import { auth } from '@/lib/auth'; // 👈 New v5 auth helper
+import { auth } from '@/lib/auth';
 import { serverClient } from '@/lib/sanity.server';
-import { 
-  FREE_PRACTICES_QUERY, 
-  PREMIUM_PRACTICES_QUERY, 
-  GET_USER_STATUS_BY_ID_QUERY 
-} from '@/lib/sanity.queries'; // 👈 Imported queries
-import PracticeCard from '@/components/Cards/PracticeCard';
+import { groq } from 'next-sanity';
+import PracticeRow from '@/components/PracticeRow';
 import styles from '@/styles/pages/home/homePage.module.css';
 
-// 1. FORCE DYNAMIC RENDERING (Essential for real-time auth/content)
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function HomePage() {
-  // 2. Get session using new helper
-  const session = await auth();
-  
-  let isPremium = false;
+// --- QUERIES ---
+const USER_DATA_QUERY = groq`*[_type == "user" && email == $email][0]{ name, goals }`;
 
-  // 3. Check status if user is logged in.
-  // We prefer fetching fresh from Sanity to handle instant upgrades after checkout.
-  if (session?.user?.id) {
-    const status = await serverClient.fetch(GET_USER_STATUS_BY_ID_QUERY, { 
-      id: session.user.id 
-    });
-    isPremium = status === 'premium';
+const BASE_PRACTICE_QUERY = `
+  *[_type == "practice" && defined(video.asset) FILTER_HERE] 
+  | order(_createdAt desc) [0...10] {
+    _id,
+    title,
+    thumbnail,
+    "slug": slug.current,
+    "duration": video.asset->data.duration,
+    "playbackId": video.asset->playbackId,
+    isPremium
   }
+`;
 
-  // 4. Select and execute the correct query
-  const query = isPremium ? PREMIUM_PRACTICES_QUERY : FREE_PRACTICES_QUERY;
-  const practices = await serverClient.fetch(query);
+const goalLabels = {
+  peace: 'Finding Inner Peace',
+  strength: 'Building Strength',
+  flexibility: 'Increasing Flexibility',
+  sleep: 'Improving Sleep',
+  beginner: 'Beginner Basics',
+};
+
+export default async function HomePage() {
+  const session = await auth();
+  const userEmail = session?.user?.email;
+
+  // 1. Fetch User Goals
+  const user = await serverClient.fetch(USER_DATA_QUERY, { email: userEmail });
+  const uniqueGoals = [...new Set(user?.goals || [])];
+
+  // 2. Create goal-based rows first
+  const rowsToFetch = uniqueGoals.map((goal) => ({
+    title: `For ${goalLabels[goal] || goal}`,
+    filter: `&& "${goal}" in goals` 
+  }));
+
+  // 3. 👇 ALWAYS add "Latest Practices" row at the bottom
+  rowsToFetch.push({
+    title: 'Newest Practices',
+    filter: '' // Empty filter means it fetches from ALL sectors
+  });
+
+  // 4. Fetch all rows in parallel
+  const promises = rowsToFetch.map(({ filter }) => {
+    const query = BASE_PRACTICE_QUERY.replace('FILTER_HERE', filter);
+    return serverClient.fetch(groq`${query}`);
+  });
+
+  const results = await Promise.all(promises);
 
   return (
     <main className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>
-          {isPremium ? 'Premium Practices' : 'Latest Practices'}
-        </h1>
-        <p className={styles.subtitle}>
-          {session?.user?.name ? `Welcome back, ${session.user.name}. ` : ''}
-          Start your flow with our newest videos.
-        </p>
+        <h2>Welcome home, {user?.name || 'Yogi'}</h2>
       </header>
       
       <div className={styles.feedGrid}>
-        {practices.length > 0 ? (
-          practices.map((practice) => (
-            <PracticeCard key={practice._id} practice={practice} />
-          ))
-        ) : (
-          <p className={styles.emptyState}>No practices available right now.</p>
-        )}
+        {rowsToFetch.map((row, index) => (
+          <PracticeRow 
+            key={row.title}
+            title={row.title}
+            practices={results[index]}
+          />
+        ))}
       </div>
     </main>
   );
