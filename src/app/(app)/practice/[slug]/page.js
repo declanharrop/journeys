@@ -4,7 +4,7 @@ import VideoPlayer from '@/components/VideoPlayer';
 import styles from '@/styles/pages/practice/practicePage.module.css';
 import { notFound, redirect } from 'next/navigation'; // 1. Import 'redirect'
 import { getServerSession } from 'next-auth'; // 2. Import auth tools
-import { authOptions } from '@/lib/authOptions';
+import { authOptions } from '@/lib/auth';
 import { urlFor } from '@/lib/sanity.client';
 
 export const dynamic = 'force-dynamic';

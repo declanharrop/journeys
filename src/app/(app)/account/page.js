@@ -1,7 +1,7 @@
 // journeys/app/src/app/(app)/account/page.js
 
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/authOptions';
+import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
 // Use your correct, verified import paths

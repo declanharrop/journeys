@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/authOptions';
+import { authOptions } from '@/lib/auth';
 import { serverClient } from '@/lib/sanity.server';
 import { groq } from 'next-sanity';
 import { Stripe } from 'stripe';

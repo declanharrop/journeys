@@ -1,8 +1,5 @@
 // journeys/app/src/app/api/auth/[...nextauth]/route.js
+import { handlers } from "@/lib/auth";
 
-import NextAuth from 'next-auth';
-import { authOptions } from '@/lib/authOptions'; // 👈 Import central config
-
-const handler = NextAuth(authOptions);
-
-export { handler as GET, handler as POST };
+// This exports the GET and POST handlers for NextAuth (simple and stable)
+export const { GET, POST } = handlers;

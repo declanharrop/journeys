@@ -3,7 +3,7 @@ import { groq } from 'next-sanity';
 import PracticeCard from '@/components/Cards/PracticeCard';
 import styles from '@/styles/pages/home/homePage.module.css';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/authOptions';
+import { authOptions } from '@/lib/auth';
 
 // 1. FORCE DYNAMIC RENDERING
 export const revalidate = 0;
