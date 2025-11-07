@@ -68,6 +68,7 @@ export const GET_ACCOUNT_DETAILS_QUERY = groq`*[_type == "user" && email == $ema
   name,
   email,
   subscriptionStatus,
+  cancelAtPeriodEnd, 
   currentPeriodEnd,
   stripeCustomerId
 }`;
