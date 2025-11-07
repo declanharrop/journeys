@@ -1,9 +1,7 @@
 // journeys/app/src/lib/auth.js
 import NextAuth from 'next-auth';
 import Auth0 from 'next-auth/providers/auth0';
-
-// Import our Sanity clients and the query
-import { sanityWriteClient } from './sanity.server'; 
+import { sanityWriteClient } from './sanity.server';
 import { GET_USER_BY_EMAIL_QUERY } from './sanity.queries';
 
 export const authOptions = {
@@ -17,32 +15,55 @@ export const authOptions = {
       },
     }),
   ],
-  session: { strategy: 'jwt' },
+  session: {
+    strategy: 'jwt',
+  },
   callbacks: {
     async jwt({ token, user, account }) {
+      // This block runs only on the initial sign-in when 'account' is present
       if (account && user) {
+        // 1. Check if user exists in Sanity
         const sanUser = await sanityWriteClient.fetch(GET_USER_BY_EMAIL_QUERY, {
           email: user.email,
         });
 
         if (sanUser) {
+          // User exists: sync token data
           token.id = sanUser._id;
           token.subscriptionStatus = sanUser.subscriptionStatus;
+
+          // Optional: Backfill auth0Id if it's missing for an existing user
+          if (!sanUser.auth0Id && account.providerAccountId) {
+            console.log(`Backfilling auth0Id for user ${sanUser._id}`);
+            // We don't await this to avoid slowing down the login flow
+            sanityWriteClient
+              .patch(sanUser._id)
+              .set({ auth0Id: account.providerAccountId })
+              .commit()
+              .catch((err) => console.error('Failed to backfill auth0Id:', err));
+          }
+
         } else {
+          // User does not exist: create them
           console.log(`New user signed up: ${user.email}. Creating Sanity document...`);
           const newUser = await sanityWriteClient.create({
             _type: 'user',
             name: user.name,
             email: user.email,
+            auth0Id: account.providerAccountId, // Capture Auth0 ID
             subscriptionStatus: 'free',
+            onboardingComplete: false,
           });
+
           token.id = newUser._id;
           token.subscriptionStatus = newUser.subscriptionStatus;
         }
       }
       return token;
     },
+
     async session({ session, token }) {
+      // Pass Sanity data from token to the client-side session
       if (token.id) {
         session.user.id = token.id;
         session.user.subscriptionStatus = token.subscriptionStatus;
@@ -53,5 +74,5 @@ export const authOptions = {
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
 };
 
-// Initialize NextAuth with options
+// Export the v5 auth helpers
 export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);
